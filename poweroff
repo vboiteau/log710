@@ -1,0 +1,2 @@
+#!/bin/bash
+VBoxManage controlvm "log710h16_32_default_1452717738926_7500" poweroff --type headless
