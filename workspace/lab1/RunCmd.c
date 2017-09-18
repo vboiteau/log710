@@ -5,38 +5,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <sys/time.h>
 #include <time.h>
-/**
- * stackoverflow visited 18 sept. 2017 
- * https://stackoverflow.com/questions/17432502/how-can-i-measure-cpu-time-and-wall-clock-time-on-both-linux-windows
- **/
-double get_wall_time() {
-    struct timeval time;
-    if(gettimeofday(&time, NULL)) {
-        return 0;
-    }
-    return (double)time.tv_sec + (double)time.tv_usec * .000001;
-}
-
-double get_cpu_time() {
-    return (double) clock() / CLOCKS_PER_SEC;
-}
-/* End of stackoverflow ref */
-
-double getSeconds(double time) {
-    return floor(time);
-}
-
-double getMicroseconds(double time) {
-    return fmod(round((time * 1000000)), 1000000);
-}
 
 int main(int argc , const char **argv) {
+    struct rusage usage;
     pid_t pid;
     char cmd[256];
-    double startWall = get_wall_time();
-    double startCPU = get_cpu_time();
     switch(pid = fork()) {
         case -1:
             perror("Fork failed");
@@ -53,11 +29,8 @@ int main(int argc , const char **argv) {
             break;
         default:
             wait(NULL);
-            double endWall = get_wall_time();
-            double endCPU = get_cpu_time();
-            double durationWall = endWall - startWall;
-            double durationCPU = endCPU - startCPU;
-            printf("\nwall time:\t%.0f seconds\t%.0f microseconds\ncpu time:\t%.0f seconds\t%.0f microseconds\n\n", getSeconds(durationWall), getMicroseconds(durationWall), getSeconds(durationCPU), getMicroseconds(durationCPU));
+            getrusage(RUSAGE_SELF, &usage);
+            printf("\nwall time:\t%ld seconds\t%d microseconds\ncpu time:\t%ld seconds\t%d microseconds\nContext switches:\t%ld involuntary\t%ld voluntary\nPage fault:\t%ld\nPage reclaims:\t%ld\n\n", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec, usage.ru_utime.tv_sec, usage.ru_utime.tv_usec, usage.ru_nivcsw, usage.ru_nvcsw, usage.ru_majflt, usage.ru_minflt);
             break;
 
     }
