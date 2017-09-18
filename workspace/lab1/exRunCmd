@@ -1,0 +1,1 @@
+ssh gti710 cd workspace/lab1/ && gcc -o RunCmd RunCmd.c && ./RunCmd ls -lah 
