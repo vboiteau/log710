@@ -42,8 +42,9 @@ int main(int argc , char **argv) {
        * Add /bin/ before command
        * TODO: consider using bash command which
        **/
-      for (i = 0; i < (whiteSpacesCount+1); ++i)
-          printf ("splitInput[%d] = %s\n", i, splitInput[i]);
+       //DEBUG PURPOSE
+       // for (i = 0; i < (whiteSpacesCount+1); ++i)
+       //     printf ("splitInput[%d] = %s\n", i, splitInput[i]);
 
       if(strcmp (splitInput[0], "exit") == 0){
           return 0;
