@@ -11,13 +11,87 @@
 #include <pthread.h>
 #define _GNU_SOURCE
 
-struct ShellThread {
+// Implementation of the singly-linked list based on the templates on rosetta code.
+// http://rosettacode.org/wiki/Singly-linked_list/Element_removal#C
+typedef struct elem{
+   struct elem *next;
    char ** userInputTable;
    int pid;
+} ShellThread;
+
+typedef ShellThread* ShellThreadTable;
+
+ShellThreadTable addToTable(ShellThreadTable startShellThread, char **userInput, int pid) {
+    ShellThreadTable iterator, temporaryShellThread;
+
+    if (startShellThread == NULL) {
+       startShellThread = (ShellThreadTable)malloc(sizeof(ShellThread));
+       startShellThread->userInputTable = userInput;
+       startShellThread->pid = pid;
+    } else {
+        iterator = startShellThread;
+        while(iterator->next!=NULL){
+            iterator = iterator->next;
+        }
+        temporaryShellThread = (ShellThreadTable)malloc(sizeof(ShellThread));
+        temporaryShellThread->userInputTable = userInput;
+        temporaryShellThread->pid = pid;
+        temporaryShellThread->next = NULL;
+        iterator->next = temporaryShellThread;
+    }
+    return startShellThread;
+}
+
+ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position) {
+    int i=1;
+    ShellThreadTable iterator, temporaryShellThread;
+
+    if (startShellThread != NULL) {
+       iterator = startShellThread;
+
+      if (position == 0) {
+         startShellThread = startShellThread->next;
+         iterator->next = NULL;
+         free(iterator); 
+      } else {
+          while(i++!=position-1 && iterator != NULL) {
+              iterator = iterator->next;
+          }
+          if (iterator != NULL) {
+             temporaryShellThread = iterator->next;
+             iterator->next = temporaryShellThread->next;
+             temporaryShellThread->next = NULL;
+             free(temporaryShellThread);
+          }
+          
+      }
+    }
+    return startShellThread;
+}
+
+int getTableLength(ShellThreadTable startShellThread) {
+    int i = 0;
+    ShellThreadTable iterator = startShellThread;
+    while(iterator != NULL) {
+        iterator = iterator->next;
+        i++;
+    }
+    return i;
+};
+
+void printTable(ShellThreadTable startShellThread) {
+    int i = 0;
+    ShellThreadTable iterator = startShellThread;
+    printf("Task currently in background consists in:\n");
+    while(iterator != NULL) {
+        iterator = iterator->next;
+        i++;
+        printf("[%d]\t%d", i, iterator->pid);
+    }
 };
 
 void *threadForking(void *arg){
-  struct ShellThread *myShellThread = (struct ShellThread*)arg;
+  ShellThread *myShellThread = (ShellThread*)arg;
   printf("IN THREAD!\n");
   //myShellThread->pid = myShellThread->pid +1;
   //printf("pid = %d", myShellThread->pid);
@@ -56,7 +130,7 @@ void *threadForking(void *arg){
 }
 
 void test(void *arg){
-  struct ShellThread *myShellThread = (struct ShellThread*)arg;
+  ShellThread *myShellThread = (ShellThread*)arg;
   struct rusage usage;
   char cmdExecFile[32];
   pid_t pid;
@@ -90,6 +164,7 @@ void test(void *arg){
 
 
 int main(int argc , char **argv) {
+    ShellThreadTable startShellThread = NULL;
     char userInput[160] = " ";
     char workingDir[160] = ".";
     int threadCount = 1;
@@ -143,8 +218,8 @@ int main(int argc , char **argv) {
         splitInput[count-1] = NULL;
         pthread_t tid;
         printf("Before Thread...\n");
-        struct ShellThread *shellThread1;
-        shellThread1 = malloc(sizeof(struct ShellThread));
+        ShellThread *shellThread1;
+        shellThread1 = malloc(sizeof(ShellThread));
         (*shellThread1).userInputTable = splitInput;
         (*shellThread1).pid = threadCount;
         pthread_create(&tid, NULL, threadForking, (void*) shellThread1);
@@ -154,8 +229,8 @@ int main(int argc , char **argv) {
         printf("After Thread...\n");
       }
       else{
-        struct ShellThread *shellThread1;
-        shellThread1 = malloc(sizeof(struct ShellThread));
+        ShellThread *shellThread1;
+        shellThread1 = malloc(sizeof(ShellThread));
         (*shellThread1).userInputTable = splitInput;
         test((void*) shellThread1);
       }
