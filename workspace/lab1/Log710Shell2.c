@@ -33,12 +33,12 @@ typedef struct elem{
     char ** userInputTable;
     int pid;
     int id;
-    char *processName;
+    char processName[];
 } ShellThread;
 
 typedef ShellThread* ShellThreadTable;
 
-ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int pid, int id, char *pName) {
+ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int pid, int id, char pName[]) {
     ShellThreadTable iterator, temporaryShellThread;
 
     if (shellThread == NULL) {
@@ -46,7 +46,7 @@ ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int 
         shellThread->userInputTable = userInput;
         shellThread->pid = pid;
         shellThread->id = id;
-        shellThread->processName = pName;
+        strcpy(shellThread->processName, pName);
     } else {
         iterator = shellThread;
         while(iterator->next!=NULL){
@@ -56,6 +56,7 @@ ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int 
         temporaryShellThread->userInputTable = userInput;
         temporaryShellThread->pid = pid;
         temporaryShellThread->id = id;
+        strcpy(temporaryShellThread->processName, pName);
         temporaryShellThread->next = NULL;
         iterator->next = temporaryShellThread;
     }
@@ -89,14 +90,14 @@ ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position
     return startShellThread;
 }
 
-ShellThreadTable removeFromTableById(ShellThreadTable startShellThread, int id) {
+ShellThreadTable removeFromTableById(ShellThreadTable shellThread, int id) {
     ShellThreadTable iterator, temporaryShellThread;
 
-    if (startShellThread != NULL) {
-        iterator = startShellThread;
+    if (shellThread != NULL) {
+        iterator = shellThread;
 
         if (iterator->id == id) {
-            startShellThread = startShellThread->next;
+            shellThread = shellThread->next;
             iterator->next = NULL;
             free(iterator);
         } else {
@@ -112,12 +113,12 @@ ShellThreadTable removeFromTableById(ShellThreadTable startShellThread, int id) 
 
         }
     }
-    return startShellThread;
+    return shellThread;
 }
 
-int getTableLength(ShellThreadTable startShellThread) {
+int getTableLength(ShellThreadTable shellThread) {
     int i = 0;
-    ShellThreadTable iterator = startShellThread;
+    ShellThreadTable iterator = shellThread;
     while(iterator != NULL) {
         iterator = iterator->next;
         i++;
@@ -125,9 +126,9 @@ int getTableLength(ShellThreadTable startShellThread) {
     return i;
 };
 
-void printTable(ShellThreadTable startShellThread) {
+void printTable(ShellThreadTable shellThread) {
     int i = 0;
-    ShellThreadTable iterator = startShellThread;
+    ShellThreadTable iterator = shellThread;
     printf("Task currently in background consists in:\n");
     while(iterator != NULL) {
         printf("[%d]\t%d --- (%s)\n", i, iterator->pid, iterator->processName);
@@ -151,7 +152,7 @@ void safeDeleteFromTableById(ShellThreadTable shellThread, int id){
 }
 
 void *threadForking(void *arg){
-    ShellThread *myShellThread = (ShellThread*)arg;
+    char **splitInput = (char **)arg;
     printf("IN THREAD!\n");
     //myShellThread->pid = myShellThread->pid +1;
     //printf("pid = %d", myShellThread->pid);
@@ -159,20 +160,23 @@ void *threadForking(void *arg){
     pid_t pid;
     int id;
     char cmdExecFile[32];
-    sprintf(cmdExecFile, "/bin/%s", myShellThread->userInputTable[0]);
-    myShellThread->userInputTable[0] = cmdExecFile;
+    sprintf(cmdExecFile, "/bin/%s", splitInput[0]);
+    splitInput[0] = cmdExecFile;
+    char *stringcopy = malloc (1 + strlen (cmdExecFile));
+    if (stringcopy)
+        strcpy (stringcopy, cmdExecFile);
     switch(pid = fork()) {
         case -1:
             perror("Fork failed");
             break;
         case 0:
-            execvp(myShellThread->userInputTable[0], myShellThread->userInputTable);
+            execvp(splitInput[0], splitInput);
             break;
         default:
             id = incrementLastThreadID();
             printf("[%d] %d", id, pid);
             fflush(stdout);
-            safeAddtoTable(startShellThread, myShellThread->userInputTable, pid, id, myShellThread->userInputTable[0]);
+            safeAddtoTable(startShellThread, splitInput, pid, id, stringcopy);
             wait(NULL);
             getrusage(RUSAGE_SELF, &usage);
             /* info about rusage found in man 2 getrusage page */
@@ -276,7 +280,6 @@ int main(int argc , char **argv) {
           chdir(splitInput[1]);
       }
       else if(strcmp (splitInput[0], "aptaches") == 0){
-          printf("Nombre de thread en cours : %d\n", lastThreadID);
           pthread_mutex_lock(&shellThreadTableLock);
           printTable(startShellThread);
           pthread_mutex_unlock(&shellThreadTableLock);
@@ -284,14 +287,10 @@ int main(int argc , char **argv) {
       else if(strcmp (splitInput[count-1], "&") == 0){
         splitInput[count-1] = NULL;
         pthread_t tid;
-        ShellThread *shellThread1;
-        shellThread1 = malloc(sizeof(ShellThread));
-        (*shellThread1).userInputTable = splitInput;
-//        printf ("splitInputCopy[%d] = %s\n", 0, splitInputCopy[0]);
-//        printf ("splitInputCopy[%d] = %s\n", 1, splitInputCopy[1]);
-//        printf ("splitInputCopy[%d] = %s\n", 2, splitInputCopy[2]);
-        pthread_create(&tid, NULL, threadForking, (void*) shellThread1);
-          free(shellThread1);
+//        ShellThread *shellThread1;
+//        shellThread1 = malloc(sizeof(ShellThread));
+//        (*shellThread1).userInputTable = splitInput;
+        pthread_create(&tid, NULL, threadForking, (void*) splitInput);
       }
       else{
         ShellThread *shellThread1;
