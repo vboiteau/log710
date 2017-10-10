@@ -174,7 +174,7 @@ void *threadForking(void *arg){
             break;
         default:
             id = incrementLastThreadID();
-            printf("[%d] %d", id, pid);
+            printf("[%d] %d \n", id, pid);
             fflush(stdout);
             safeAddtoTable(startShellThread, splitInput, pid, id, stringcopy);
             wait(NULL);
@@ -238,13 +238,25 @@ int main(int argc , char **argv) {
     int threadCount = 1;
     int * threadTable;
     while (strcmp (userInput, "exit") != 0){
-      printf("%s", "Log710A2017%> ");
-      scanf("%[^\n]%*c", userInput);
+        start:
+        printf("%s", "Log710A2017%> ");
+        fgets(userInput, sizeof userInput, stdin);
+        userInput[strcspn(userInput, "\r\n")] = 0;
+        //scanf("%[^\n]%*c", userInput);
+        fflush(stdin);
+        fflush(stdin);
       char ** splitInput;
       char * splitter = strtok (userInput, " ");
       int whiteSpacesCount = 0, i;
 
       if(strcmp (userInput, "exit") == 0){
+          pthread_mutex_lock(&shellThreadTableLock);
+          int a = getTableLength(startShellThread);
+          pthread_mutex_unlock(&shellThreadTableLock);
+          if(a > 0){
+              printf("Impossible de quitter, %d threads sont en cours\n", a);
+              goto start;
+          }
         return 0;
       }
 
@@ -257,7 +269,6 @@ int main(int argc , char **argv) {
       }
       splitInput = realloc (splitInput, sizeof (char*) * (whiteSpacesCount+1));
       splitInput[whiteSpacesCount] = 0;
-
       // Variable initiation
 
       /**
@@ -267,13 +278,23 @@ int main(int argc , char **argv) {
        //DEBUG PURPOSE
        int count = 0;
        for (i = 0; i < (whiteSpacesCount+1); ++i){
-         printf ("splitInput[%d] = %s\n", i, splitInput[i]);
+         //printf ("splitInput[%d] = %s\n", i, splitInput[i]);
          count++;
        }
        count--;
-       printf("sizeof of array: %d\n", count);
+       //printf("sizeof of array: %d\n", count);
 
+        if (splitInput[0] == NULL){
+            goto start;
+        }
       if(strcmp (splitInput[0], "exit") == 0){
+          pthread_mutex_lock(&shellThreadTableLock);
+          int a = getTableLength(startShellThread);
+          pthread_mutex_unlock(&shellThreadTableLock);
+          if(a > 0){
+              printf("Impossible de quitter, %d threads sont en cours\n", a);
+              goto start;
+          }
           return 0;
       }
       else if(strcmp (splitInput[0], "cd") == 0){
