@@ -233,14 +233,18 @@ void test(void *arg){
 
 
 int main(int argc , char **argv) {
-    char userInput[160] = " ";
+    char userInput[160] = "";
     char workingDir[160] = ".";
     int threadCount = 1;
     int * threadTable;
     while (strcmp (userInput, "exit") != 0){
         start:
-      printf("%s", "Log710A2017%> ");
-      scanf("%[^\n]%*c", userInput);
+        printf("%s", "Log710A2017%> ");
+        fgets(userInput, sizeof userInput, stdin);
+        userInput[strcspn(userInput, "\r\n")] = 0;
+        //scanf("%[^\n]%*c", userInput);
+        fflush(stdin);
+        fflush(stdin);
       char ** splitInput;
       char * splitter = strtok (userInput, " ");
       int whiteSpacesCount = 0, i;
@@ -265,7 +269,6 @@ int main(int argc , char **argv) {
       }
       splitInput = realloc (splitInput, sizeof (char*) * (whiteSpacesCount+1));
       splitInput[whiteSpacesCount] = 0;
-
       // Variable initiation
 
       /**
@@ -281,6 +284,9 @@ int main(int argc , char **argv) {
        count--;
        //printf("sizeof of array: %d\n", count);
 
+        if (splitInput[0] == NULL){
+            goto start;
+        }
       if(strcmp (splitInput[0], "exit") == 0){
           pthread_mutex_lock(&shellThreadTableLock);
           int a = getTableLength(startShellThread);
