@@ -1,0 +1,5 @@
+#!/bin/bash
+cmd="ssh gti710 cd workspace workspace/lab1 && gcc"
+select project in RunCmd Log710Shell Log710Shell2; do
+    ssh gti710 -t "cd workspace/lab1/ && sudo make $project && ./$project"
+done

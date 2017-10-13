@@ -123,7 +123,7 @@ void safeDeleteFromTableById(ShellThreadTable shellThread, int id){
     pthread_mutex_unlock(&shellThreadTableLock);
 }
 
-void *threadForking(void *arg){
+void *launchTaskInBackground(void *arg){
     char **splitInput = (char **)arg;
     printf("IN THREAD!\n");
     //myShellThread->pid = myShellThread->pid +1;
@@ -149,11 +149,10 @@ void *threadForking(void *arg){
             printf("[%d] %d \n", id, pid);
             fflush(stdout);
             safeAddtoTable(startShellThread, splitInput, pid, id, stringcopy);
-            waitpid(pid,NULL, NULL);
-            getrusage(RUSAGE_SELF, &usage);
+            wait4(pid, NULL, WUNTRACED, &usage);
             /* info about rusage found in man 2 getrusage page */
             printf(
-                  "\nsystem time:\t%ld seconds\t%d microseconds\nuser time:\t%ld seconds\t%d microseconds\nContext switches:\t%ld involuntary\t%ld voluntary\nPage fault:\t%ld\nPage reclaims:\t%ld\n\n",
+                  "\nsystem time:\t%ld seconds\t%ld microseconds\nuser time:\t%ld seconds\t%ld microseconds\nContext switches:\t%ld involuntary\t%ld voluntary\nPage fault:\t%ld\nPage reclaims:\t%ld\n\n",
                   usage.ru_stime.tv_sec, // system seconds
                   usage.ru_stime.tv_usec, // system microseconds
                   usage.ru_utime.tv_sec, // user seconds
@@ -170,7 +169,7 @@ void *threadForking(void *arg){
     return 0;
 }
 
-void test(void *arg){
+void launchTaskInForeground(void *arg){
   ShellThread *myShellThread = (ShellThread*)arg;
   struct rusage usage;
   char cmdExecFile[32];
@@ -185,11 +184,10 @@ void test(void *arg){
           execvp(myShellThread->userInputTable[0], myShellThread->userInputTable);
           break;
       default:
-          waitpid(pid, NULL, NULL);
-          getrusage(RUSAGE_SELF, &usage);
+          wait4(pid, NULL, NULL, &usage);
           /* info about rusage found in man 2 getrusage page */
           printf(
-                  "\nsystem time:\t%ld seconds\t%d microseconds\nuser time:\t%ld seconds\t%d microseconds\nContext switches:\t%ld involuntary\t%ld voluntary\nPage fault:\t%ld\nPage reclaims:\t%ld\n\n",
+                  "\nsystem time:\t%ld seconds\t%ld microseconds\nuser time:\t%ld seconds\t%ld microseconds\nContext switches:\t%ld involuntary\t%ld voluntary\nPage fault:\t%ld\nPage reclaims:\t%ld\n\n",
                   usage.ru_stime.tv_sec, // system seconds
                   usage.ru_stime.tv_usec, // system microseconds
                   usage.ru_utime.tv_sec, // user seconds
@@ -283,13 +281,13 @@ int main(int argc , char **argv) {
 //        ShellThread *shellThread1;
 //        shellThread1 = malloc(sizeof(ShellThread));
 //        (*shellThread1).userInputTable = splitInput;
-        pthread_create(&tid, NULL, threadForking, (void*) splitInput);
+        pthread_create(&tid, NULL, launchTaskInBackground, (void*) splitInput);
       }
       else{
         ShellThread *shellThread1;
         shellThread1 = malloc(sizeof(ShellThread));
         (*shellThread1).userInputTable = splitInput;
-        test((void*) shellThread1);
+        launchTaskInForeground((void*) shellThread1);
       }
     }
     return 0;

@@ -1,2 +1,0 @@
-#!/bin/bash
-ssh gti710 cd workspace/lab1/ && gcc -o Log710Shell Log710Shell.c && ./Log710Shell top -r \&
