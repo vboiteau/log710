@@ -73,7 +73,7 @@ ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position
         if (position == 0) {
             startShellThread = startShellThread->next;
             iterator->next = NULL;
-            free(iterator);
+            //free(iterator);
         } else {
             while(i++!=position-1 && iterator != NULL) {
                 iterator = iterator->next;
@@ -82,7 +82,7 @@ ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position
                 temporaryShellThread = iterator->next;
                 iterator->next = temporaryShellThread->next;
                 temporaryShellThread->next = NULL;
-                free(temporaryShellThread);
+                //free(temporaryShellThread);
             }
 
         }
@@ -91,26 +91,23 @@ ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position
 }
 
 ShellThreadTable removeFromTableById(ShellThreadTable shellThread, int id) {
-    ShellThreadTable iterator, temporaryShellThread;
+    ShellThreadTable tmp = shellThread;
+    ShellThreadTable prev = NULL;
 
-    if (shellThread != NULL) {
-        iterator = shellThread;
-
-        if (iterator->id == id) {
-            shellThread = shellThread->next;
-            iterator->next = NULL;
-            free(iterator);
-        } else {
-            while(iterator != NULL && iterator->id != id) {
-                iterator = iterator->next;
-            }
-            if (iterator != NULL) {
-                temporaryShellThread = iterator->next;
-                iterator->next = temporaryShellThread->next;
-                temporaryShellThread->next = NULL;
-                free(temporaryShellThread);
-            }
-
+    while (tmp->id != id && tmp->next != NULL)
+    {
+        prev = tmp;
+        tmp = tmp->next;
+    }
+    if (tmp->id == id)
+    {
+        if (prev)
+        {
+            prev->next = tmp->next;
+        }
+        else
+        {
+            shellThread = tmp->next;
         }
     }
     return shellThread;

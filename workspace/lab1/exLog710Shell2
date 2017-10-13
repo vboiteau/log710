@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh gti710 -t "cd workspace/lab1/ && sudo gcc Log710Shell2.c -lpthread -o Log710Shell2 && sudo ./Log710Shell2"
