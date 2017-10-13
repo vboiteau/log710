@@ -14,4 +14,12 @@ typedef ShellThread* ShellThreadTable;
 int getTableLength(ShellThreadTable shellTable);
 
 ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int pid, int id, char pName[]);
+
+ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position); 
+
+
+int getPositionOfId(ShellThreadTable shellThread, int id); 
+
+void printTable(ShellThreadTable shellThread); 
+
 #endif

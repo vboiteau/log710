@@ -92,35 +92,6 @@ int getPositionOfId(ShellThreadTable shellThread, int id) {
     return i;
 }
 
-/*ShellThreadTable removeFromTableById(ShellThreadTable shellThread, int id) {*/
-    /*ShellThreadTable iterator, temporaryShellThread;*/
-
-
-    /*if (shellThread != NULL) {*/
-        /*iterator = shellThread;*/
-
-        /*if (iterator->id == id) {*/
-            /*shellThread = shellThread->next;*/
-            /*iterator->next = NULL;*/
-            /*free(iterator);*/
-        /*} else {*/
-            /*while(iterator != NULL && iterator->id != id) {*/
-                /*iterator = iterator->next;*/
-            /*}*/
-            /*if (iterator != NULL) {*/
-                /*temporaryShellThread = iterator->next;*/
-                /*if (temporaryShellThread != NULL) {*/
-                    /*iterator->next = temporaryShellThread->next;*/
-                    /*temporaryShellThread->next = NULL;*/
-                    /*free(temporaryShellThread);*/
-                /*}*/
-            /*}*/
-
-        /*}*/
-    /*}*/
-    /*return shellThread;*/
-/*}*/
-
 void printTable(ShellThreadTable shellThread) {
     int i = 0;
     ShellThreadTable iterator = shellThread;
