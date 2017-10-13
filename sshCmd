@@ -1,2 +1,2 @@
 #!/bin/bash
-ssh gti710 $1
+ssh -p 2222 vagrant@localhost "$1"
