@@ -63,33 +63,6 @@ ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int 
     return shellThread;
 }
 
-ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position) {
-    int i=1;
-    ShellThreadTable iterator, temporaryShellThread;
-
-    if (startShellThread != NULL) {
-        iterator = startShellThread;
-
-        if (position == 0) {
-            startShellThread = startShellThread->next;
-            iterator->next = NULL;
-            //free(iterator);
-        } else {
-            while(i++!=position-1 && iterator != NULL) {
-                iterator = iterator->next;
-            }
-            if (iterator != NULL) {
-                temporaryShellThread = iterator->next;
-                iterator->next = temporaryShellThread->next;
-                temporaryShellThread->next = NULL;
-                //free(temporaryShellThread);
-            }
-
-        }
-    }
-    return startShellThread;
-}
-
 ShellThreadTable removeFromTableById(ShellThreadTable shellThread, int id) {
     //printf("Deleting : %d", id);
     fflush(stdout);
@@ -124,19 +97,6 @@ int getTableLength(ShellThreadTable shellThread) {
     }
     return i;
 };
-
-int getPositionInTableForPId(ShellThreadTable table, pid_t pid) {
-    int i = 0;
-    ShellThreadTable iterator = table;
-    while (iterator != NULL && iterator->pid != pid) {
-        i ++;
-        iterator = iterator->next;
-    }
-    if (i < getTableLength(table)) {
-        return i;
-    }
-    return -1;
-}
 
 void printTable(ShellThreadTable shellThread) {
     int i = 0;
