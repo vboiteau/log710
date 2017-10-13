@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <pthread.h>
+#include "lib/linkedList.h"
 #define _GNU_SOURCE
 
 pthread_mutex_t threadIdLock;
@@ -24,119 +25,6 @@ int incrementLastThreadID(){
     return temp;
 }
 
-
-
-// Implementation of the singly-linked list based on the templates on rosetta code.
-// http://rosettacode.org/wiki/Singly-linked_list/Element_removal#C
-typedef struct elem{
-    struct elem *next;
-    char ** userInputTable;
-    int pid;
-    int id;
-    char processName[];
-} ShellThread;
-
-typedef ShellThread* ShellThreadTable;
-
-ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int pid, int id, char pName[]) {
-    ShellThreadTable iterator, temporaryShellThread;
-
-    if (shellThread == NULL) {
-        shellThread = (ShellThreadTable)malloc(sizeof(ShellThread));
-        shellThread->userInputTable = userInput;
-        shellThread->pid = pid;
-        shellThread->id = id;
-        strcpy(shellThread->processName, pName);
-    } else {
-        iterator = shellThread;
-        while(iterator->next!=NULL){
-            iterator = iterator->next;
-        }
-        temporaryShellThread = (ShellThreadTable)malloc(sizeof(ShellThread));
-        temporaryShellThread->userInputTable = userInput;
-        temporaryShellThread->pid = pid;
-        temporaryShellThread->id = id;
-        strcpy(temporaryShellThread->processName, pName);
-        temporaryShellThread->next = NULL;
-        iterator->next = temporaryShellThread;
-    }
-    return shellThread;
-}
-
-ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position) {
-    int i=1;
-    ShellThreadTable iterator, temporaryShellThread;
-
-    if (startShellThread != NULL) {
-        iterator = startShellThread;
-
-        if (position == 0) {
-            startShellThread = startShellThread->next;
-            iterator->next = NULL;
-            free(iterator);
-        } else {
-            while(i++!=position-1 && iterator != NULL) {
-                iterator = iterator->next;
-            }
-            if (iterator != NULL) {
-                temporaryShellThread = iterator->next;
-                iterator->next = temporaryShellThread->next;
-                temporaryShellThread->next = NULL;
-                free(temporaryShellThread);
-            }
-
-        }
-    }
-    return startShellThread;
-}
-
-ShellThreadTable removeFromTableById(ShellThreadTable shellThread, int id) {
-    ShellThreadTable iterator, temporaryShellThread;
-
-    if (shellThread != NULL) {
-        iterator = shellThread;
-
-        if (iterator->id == id) {
-            shellThread = shellThread->next;
-            iterator->next = NULL;
-            free(iterator);
-        } else {
-            while(iterator != NULL && iterator->id != id) {
-                iterator = iterator->next;
-            }
-            if (iterator != NULL) {
-                temporaryShellThread = iterator->next;
-                iterator->next = temporaryShellThread->next;
-                temporaryShellThread->next = NULL;
-                free(temporaryShellThread);
-            }
-
-        }
-    }
-    return shellThread;
-}
-
-int getTableLength(ShellThreadTable shellThread) {
-    int i = 0;
-    ShellThreadTable iterator = shellThread;
-    while(iterator != NULL) {
-        iterator = iterator->next;
-        i++;
-    }
-    return i;
-};
-
-void printTable(ShellThreadTable shellThread) {
-    int i = 0;
-    ShellThreadTable iterator = shellThread;
-    printf("Task currently in background consists in:\n");
-    while(iterator != NULL) {
-        printf("[%d]\t%d --- (%s)\n", i, iterator->pid, iterator->processName);
-        iterator = iterator->next;
-        i++;
-    }
-};
-
 ShellThreadTable startShellThread = NULL;
 
 void safeAddtoTable(ShellThreadTable shellThread, char **userInput, int pid, int id, char pName[]) {
@@ -147,7 +35,7 @@ void safeAddtoTable(ShellThreadTable shellThread, char **userInput, int pid, int
 
 void safeDeleteFromTableById(ShellThreadTable shellThread, int id){
     pthread_mutex_lock(&shellThreadTableLock);
-    startShellThread = removeFromTableById(shellThread, id);
+    startShellThread = removeFromTable(shellThread, getPositionOfId(shellThread, id));
     pthread_mutex_unlock(&shellThreadTableLock);
 }
 

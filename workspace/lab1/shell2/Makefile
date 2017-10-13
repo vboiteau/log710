@@ -1,5 +1,7 @@
+PWD := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 LIBS=-lpthread
-LOUT=lib/shell2lib.a
+LDIR=lib
+LOUT=$(LDIR)/libshell2.a
 CC=gcc
 CFLAGS=-Wall
 SDIR=src
@@ -7,8 +9,13 @@ SLDIR=$(SDIR)/lib
 ODIR=obj
 INC=-Iinc
 
-_OBJS=linkedList.o
-OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
+_OBJS=linkedList
+
+OBJS=$(patsubst %,$(ODIR)/%.o,$(_OBJS))
+EXTRAS=$(patsubst %,$(SDIR)/lib/%.c,$(_OBJS))
+SOBJS=$(patsubst %,$(LDIR)/lib%.so,$(_OBJS))
+
+SHARED_LIBRARY=-L$(PWD)/$(LDIR) $(patsubst %,-l% ,$(_OBJS))
 
 TEST_LIBS=-lcriterion
 TEST_EXECUTABLE=bin/test
@@ -21,11 +28,11 @@ all: build $(EXECUTABLE)
 test: build $(TEST_EXECUTABLE)
 	@$(TEST_EXECUTABLE)
 
-$(LOUT):  $(OBJS)
-	@ar rs $(LOUT) $^ 2> /dev/null
+$(LDIR)/lib%.so: $(ODIR)/%.o
+	$(CC) $< -shared -o $@ 
 
-$(ODIR)/%.o : $(SLDIR)/%.c 
-	@$(CC) -c $(INC) -o $@ $< $(CFLAGS)
+$(ODIR)/%.o: $(SLDIR)/%.c 
+	@$(CC) -c -Wall -Werror -fpic $< -o $@ $(CFLAGS)
 
 build: clean
 	@mkdir -p lib bin obj
@@ -33,10 +40,9 @@ build: clean
 clean:
 	@rm -rf lib bin obj
 
-$(EXECUTABLE): $(LOUT)
+$(EXECUTABLE): $(SOBJS)
 	@$(CC) -c src/main.c -o obj/main.o
-	@$(CC) obj/main.o $(LOUT) $(LIBS) -o $(EXECUTABLE) 
+	@$(CC) obj/main.o $(LIBS) $(SHARED_LIBRARY) -o $(EXECUTABLE) 
 
-$(TEST_EXECUTABLE): $(LOUT)
-	@$(CC) -c test/*.c -o obj/test.o 
-	@$(CC) obj/test.o $(LOUT) $(TEST_LIBS) -o $(TEST_EXECUTABLE)
+$(TEST_EXECUTABLE): $(SOBJS)
+	@$(CC) test/*.c $(EXTRAS) $(TEST_LIBS) -o $(TEST_EXECUTABLE)

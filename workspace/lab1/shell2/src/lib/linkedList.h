@@ -11,15 +11,14 @@ typedef struct elem{
 
 typedef ShellThread* ShellThreadTable;
 
-int getTableLength(ShellThreadTable shellTable);
 
-ShellThreadTable addToTable(ShellThreadTable shellThread, char **userInput, int pid, int id, char pName[]);
-
-ShellThreadTable removeFromTable(ShellThreadTable startShellThread, int position); 
+ShellThreadTable addToTable(ShellThreadTable table, char **userInput, int pid, int id, char pName[]);
+ShellThreadTable removeFromTable(ShellThreadTable table, int position); 
 
 
-int getPositionOfId(ShellThreadTable shellThread, int id); 
+int getTableLength(ShellThreadTable table);
+int getPositionOfId(ShellThreadTable table, int id); 
 
-void printTable(ShellThreadTable shellThread); 
-
+void printTable(ShellThreadTable table); 
+char* tableToString(ShellThreadTable table);
 #endif
