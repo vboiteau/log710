@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh gti710 -t "cd workspace/lab1/ && sudo make debug"

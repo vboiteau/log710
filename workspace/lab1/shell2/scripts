@@ -1,0 +1,9 @@
+#!/bin/bash
+select script in execute test; do
+    if [ "$script" = "execute" ]; then
+        ssh gti710 -t "cd workspace/lab1/shell2 && sudo make"
+    elif [ "$script" = "test" ]; then
+        testCmd="ssh gti710 \"cd workspace/lab1/shell2 && sudo make test\""
+        eval "onchange src/**/*.c src/**/*.h test/**/*.c -- $testCmd"
+    fi
+done
