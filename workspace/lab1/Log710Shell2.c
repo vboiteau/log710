@@ -123,6 +123,19 @@ int getTableLength(ShellThreadTable shellThread) {
     return i;
 };
 
+int getPositionInTableForPId(ShellThreadTable table, pid_t pid) {
+    int i = 0;
+    ShellThreadTable iterator = table;
+    while (iterator != NULL && iterator->pid != pid) {
+        i ++;
+        iterator = iterator->next;
+    }
+    if (i < getTableLength(table)) {
+        return i;
+    }
+    return -1;
+}
+
 void printTable(ShellThreadTable shellThread) {
     int i = 0;
     ShellThreadTable iterator = shellThread;
@@ -142,9 +155,12 @@ void safeAddtoTable(ShellThreadTable shellThread, char **userInput, int pid, int
     pthread_mutex_unlock(&shellThreadTableLock);
 }
 
-void safeDeleteFromTableById(ShellThreadTable shellThread, int id){
+void safeDeleteFromTableByPId(ShellThreadTable shellThread, pid_t pid){
     pthread_mutex_lock(&shellThreadTableLock);
-    startShellThread = removeFromTableById(shellThread, id);
+    int position = getPositionInTableForPId(shellThread, pid);
+    if (position > 0) {
+        startShellThread = removeFromTable(shellThread, position);
+    }
     pthread_mutex_unlock(&shellThreadTableLock);
 }
 
@@ -161,7 +177,7 @@ void *threadForking(void *arg){
     splitInput[0] = cmdExecFile;
     char *stringcopy = malloc (1 + strlen (cmdExecFile));
     if (stringcopy)
-        strcpy (stringcopy, cmdExecFile);
+        strcpy(stringcopy, cmdExecFile);
     switch(pid = fork()) {
         case -1:
             perror("Fork failed");
@@ -174,7 +190,7 @@ void *threadForking(void *arg){
             printf("[%d] %d \n", id, pid);
             fflush(stdout);
             safeAddtoTable(startShellThread, splitInput, pid, id, stringcopy);
-            wait(NULL);
+            pid_t endedPid = wait(NULL);
             getrusage(RUSAGE_SELF, &usage);
             /* info about rusage found in man 2 getrusage page */
             printf(
@@ -188,7 +204,7 @@ void *threadForking(void *arg){
                   usage.ru_majflt, // page faults
                   usage.ru_minflt // page reclaims
                 );
-            safeDeleteFromTableById(startShellThread, id);
+            safeDeleteFromTableByPId(startShellThread, endedPid);
             break;
     }
     //myShellThread->pid--;
@@ -230,7 +246,7 @@ void test(void *arg){
 
 
 int main(int argc , char **argv) {
-    char userInput[160] = " ";
+    char userInput[160] = "";
     char workingDir[160] = ".";
     int threadCount = 1;
     int * threadTable;
