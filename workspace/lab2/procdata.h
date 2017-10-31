@@ -1,8 +1,8 @@
 #ifndef PROCDATA
 #define PROCDATA
 
-#include <linux/types.h>
-#include <linux/pid.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 struct procdata{
     long state;

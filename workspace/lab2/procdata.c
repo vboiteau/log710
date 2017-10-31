@@ -1,29 +1,33 @@
-#include <sys/syscall.h>
-#include "procdata.h"
-#include <stdio.h>
-#include <current.h>
-#include <asm-generic/current.h>
-#include <asm-generic/uaccess.h>
+#include <linux/syscalls.h>
+#include <asm/current.h>
+#include <asm/uaccess.h>
 #include <linux/sched.h>
+#include <linux/string.h>
+#include <linux/kernel.h>
+#include <linux/uidgid.h>
 
-#define sys_log710a2017as2 CHOSENNUMBER
 
-long callAS2 (void) {
-    return (long) syscall(sys_log710a2017as2);
-};
-
-int main() {
-    struct procdata currentProcData;
-    struct procdata* procDataToPass;
-    currentProcData->pid = getpid();
-    currentProcData->parent_pid = getppid();
-    currentProcData->uid = getuid();
-    struct task_struct taskStruct = get_current();
-    currentProcData->state = taskStruct->state;
-    currentProcData->comm = taskStruct->comm;
-    if (copy_to_user(procDataToPass, currentProcData, sizeof(procdata))) {
-        return -EFAULT;
+asmlinkage long sys_log710a2017as2(const struct procdata __user *p){
+    struct procdata trustedProcData;
+    printk(KERN_ALERT "LOG710 L2P3: pid: %ld\n", (long)current->pid);
+    printk(KERN_ALERT "LOG710 L2P3: ppid: %d\n", task_ppid_nr(current));
+    printk(KERN_ALERT "LOG710 L2P3: uid: %d\n", current->cred->uid);
+    printk(KERN_ALERT "LOG710 L2P3: state: %d\n", current->state);
+    if(!p){
+	return -EFAULT;
     }
-    printf("Lecode de retour du deuxième apple system est : %d\n", callAS2());
+    trustedProcData.pid = current->pid;
+    //trustedProcData->parent_pid = task_ppid_nr(current);
+    trustedProcData.parent_pid = current->parent->pid;
+    trustedProcData.uid = __kuid_val(current->cred->uid);
+    trustedProcData.state = current->state;
+    strcpy(trustedProcData.comm, current->comm);
+    printk(KERN_ALERT "LOG710 L2P3: p.pid: %ld\n", (long)trustedProcData.pid);
+    printk(KERN_ALERT "LOG710 L2P3: p.ppid: %d\n", trustedProcData.parent_pid);
+    printk(KERN_ALERT "LOG710 L2P3: p.uid: %d\n", trustedProcData.uid);
+    printk(KERN_ALERT "LOG710 L2P3: p.state: %d\n", trustedProcData.state);
+    if(copy_to_user(p, &trustedProcData, sizeof(trustedProcData))){
+	return -EFAULT;
+    }
     return 0;
 }
