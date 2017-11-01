@@ -13,7 +13,7 @@ asmlinkage long sys_log710a2017as2(const struct procdata __user *p){
     printk(KERN_ALERT "LOG710 L2P3: ppid: %d\n", task_ppid_nr(current));
     printk(KERN_ALERT "LOG710 L2P3: uid: %d\n", current->cred->uid);
     printk(KERN_ALERT "LOG710 L2P3: state: %d\n", current->state);
-    if(!p){
+    if(copy_from_user(&trustedProcData, p, sizeof(p))){
 	return -EFAULT;
     }
     trustedProcData.pid = current->pid;
